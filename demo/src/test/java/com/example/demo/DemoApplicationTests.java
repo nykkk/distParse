@@ -46,7 +46,7 @@ class DemoApplicationTests {
 
     @Test
     public void dd(){
-        String s = "国内分布：云南各地（北部和东南部除外），四川南部和贵州南部也有";
+        String s = "喜马拉雅山东部，浙江西部";
         JSON json = parseService.parseProvinceData(s);
         JSONObject object = JSONObject.parseObject(json.toString());
         JSONArray data = object.getJSONArray("data");
@@ -58,9 +58,10 @@ class DemoApplicationTests {
 
     @Test
     public void dd1(){
-        String s = "福建（福州、南平、顺昌、将乐、沙县、三明、泉州、漳州），中国广泛分布（西藏除外）；";
-        BaseResults baseResults = parseService.parseCountyData(s);
-        System.out.println(baseResults.getData());
+        String s = "福建";
+        System.out.println(s.contains("福建"));
+       /* BaseResults baseResults = parseService.parseCountyData(s);
+        System.out.println(baseResults.getData());*/
     }
 
     @Test
@@ -75,4 +76,16 @@ class DemoApplicationTests {
 
     }
 
+    @Test
+    public void de3(){
+        BaseResults baseResults = parseService.parseLngAndLat("河北", "保定", "新华", "");
+        System.out.println(baseResults.toString());
+
+    }
+
+    @Test
+    public void de4(){
+        BaseResults baseResults = parseService.parseLngAndLatFromData("国内分布：产于安徽南部（歙县、休宁、祁门）、浙江南部和西部（龙泉、遂昌、丽水、泰顺、平阳、西天目山）、江西、福建、湖南（宁远、长沙、宜章、雪峰山、新宁、汝桂、酃县、东安、莽山、城步）、广东、广西（西部山区除外）、贵州（黎平）");
+        System.out.println(baseResults.toString());
+    }
 }

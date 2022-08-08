@@ -17,8 +17,6 @@ import java.io.Serializable;
 @Data
 public class CountyNewVO implements Serializable {
 
-    private String id;
-
     private String valueContent;
 
     private String city;

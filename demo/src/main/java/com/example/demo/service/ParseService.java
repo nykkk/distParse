@@ -41,4 +41,12 @@ public interface ParseService {
      * @date  2022/8/4
      */
     BaseResults parseLngAndLat(String province,String city,String county,String locality);
+
+    /**
+     * <p><b>经纬度查询<b><p>
+     * <p>参数：解析语句<p>
+     * @Author: Ny
+     * @date  2022/8/5
+     */
+    BaseResults parseLngAndLatFromData(String content);
 }
