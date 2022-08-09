@@ -46,10 +46,11 @@ class DemoApplicationTests {
 
     @Test
     public void dd(){
-        String s = "喜马拉雅山东部，浙江西部";
+        String s = "喜马拉雅山东部，除浙江西部外";
         JSON json = parseService.parseProvinceData(s);
         JSONObject object = JSONObject.parseObject(json.toString());
         JSONArray data = object.getJSONArray("data");
+        System.out.println(data);
         for (Object datum : data) {
             ProvinceVO provinceVO = JSON.parseObject(datum.toString(), ProvinceVO.class);
             System.out.println(provinceVO);
