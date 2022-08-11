@@ -46,11 +46,11 @@ class DemoApplicationTests {
 
     @Test
     public void dd(){
-        String s = "喜马拉雅山东部，除浙江西部外";
+        String s = "喜马拉雅山东部，浙江西部";
         JSON json = parseService.parseProvinceData(s);
         JSONObject object = JSONObject.parseObject(json.toString());
         JSONArray data = object.getJSONArray("data");
-        System.out.println(data);
+        System.out.println(object);
         for (Object datum : data) {
             ProvinceVO provinceVO = JSON.parseObject(datum.toString(), ProvinceVO.class);
             System.out.println(provinceVO);
@@ -79,14 +79,36 @@ class DemoApplicationTests {
 
     @Test
     public void de3(){
-        BaseResults baseResults = parseService.parseLngAndLat("河北", "保定", "新华", "");
-        System.out.println(baseResults.toString());
+        // JSON json = parseService.parseLngAndLat("河北", "", "新华", "");
+        //JSON json = parseService.parseLngAndLat("河北", "", "新华", "河北政法学院");
+        //JSON json = parseService.parseLngAndLat("河北", "沧州", "新华", "");
+        // JSON json = parseService.parseLngAndLat("河北", "石家庄", "新华", "");
+         //JSON json = parseService.parseLngAndLat("河北", "唐山市", "新华", "");
+        // JSON json = parseService.parseLngAndLat("河北", "石家庄", "无为", "");
+        // JSON json = parseService.parseLngAndLat("河北", "石家庄", "无为", "");
+         JSON json = parseService.parseLngAndLat("河r", "石家庄", "无为", "");
+        //JSON json = parseService.parseLngAndLat("河北", "", "无为", "");
+        System.out.println(json);
 
     }
 
     @Test
     public void de4(){
-        BaseResults baseResults = parseService.parseLngAndLatFromData("国内分布：产于安徽南部（歙县、休宁、祁门）、浙江南部和西部（龙泉、遂昌、丽水、泰顺、平阳、西天目山）、江西、福建、湖南（宁远、长沙、宜章、雪峰山、新宁、汝桂、酃县、东安、莽山、城步）、广东、广西（西部山区除外）、贵州（黎平）");
+        BaseResults baseResults = parseService.parseLngAndLatFromData("国内分布：产于安徽南部（歙县、休宁、祁门）、浙江南部和西部（龙泉、遂昌、丽水、泰顺、平阳、西天目山）、江西、福建、湖南（宁远、长沙、宜章、雪峰山、新宁、汝桂、酃县、东安、莽山、城步）、广东、广西（西部山区除外）、贵州（黎平）等地区");
         System.out.println(baseResults.toString());
+    }
+
+    @Test
+    public void de5(){
+        // 县地名解析，无视省份
+        BaseResults baseResults = parseService.parseCountyDataAll("西昌,会东");
+        System.out.println(baseResults);
+    }
+
+    @Test
+    public void de6(){
+        // 县地名解析，只解析当前省份下的县
+        BaseResults baseResults = parseService.parseCountyDataPart("安徽南部（歙县、休宁、祁门）、浙江南部和西部（龙泉、遂昌、丽水、泰顺、平阳、西天目山）、江西、福建、湖南（宁远、长沙、宜章、雪峰山、新宁、汝桂、酃县、东安、莽山、城步）、广东、广西（西部山区除外）、贵州（黎平）等地区", "浙江");
+        System.out.println(baseResults);
     }
 }

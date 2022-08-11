@@ -43,20 +43,6 @@ public class ParseServiceImpl implements ParseService {
     @Override
     public JSON parseProvinceData(String content) {
 
-     /*   List<Geoobject> provinceList = geoobjectRepository.findByGeotypeAsProvince();
-        // 返回体
-        List<ProvinceVO> provinceVOList = new ArrayList<>();
-
-        for (Geoobject geoobject : provinceList) {
-            String shortName = geoobject.getShortName();
-            if (content.contains(shortName)){
-                ProvinceVO provinceVO = new ProvinceVO();
-                provinceVO.setId(UUIDUtils.getUUID32());
-                provinceVO.setProvince(geoobject.getCngeoname());
-                provinceVO.setAdcode(geoobject.getAdcode());
-                provinceVOList.add(provinceVO);
-            }
-        }*/
         // 返回JSON
         JSONObject response = new JSONObject();
 
@@ -233,23 +219,10 @@ public class ParseServiceImpl implements ParseService {
         return provinceVOList;
     }
 
-    /*else if (content.contains("除外")){
-            // 取出现的省份
-            for (Geoobject geoobject : provinceList) {
-                String cngeoname = geoobject.getCngeoname();
-                if (content.contains(cngeoname)){
-                    ProvinceVO provinceVO = new ProvinceVO();
-                    provinceVO.setProvince(geoobject.getCngeoname());
-                    provinceVO.setAdcode(geoobject.getAdcode());
-                    provinceVOList.add(provinceVO);
-                }
-            }
-            response.put("data",provinceVOList);
-            return response;
 
-        }*/
     @Override
     public BaseResults parseCountyData(String content) {
+
         List<ProvinceVO> provinceVOList = new ArrayList<>();
         List<CountyNewVO> countyNewVOList = new ArrayList<>();
         List<CountyOldVO> countyOldVOList = new ArrayList<>();
@@ -410,7 +383,334 @@ public class ParseServiceImpl implements ParseService {
     }
 
     @Override
-    public BaseResults parseLngAndLat(String province, String city, String county, String locality) {
+    public BaseResults parseCountyDataAll(String content) {
+        List<CountyNewVO> countyNewVOList = new ArrayList<>();
+        List<CountyOldVO> countyOldVOList = new ArrayList<>();
+        // 1.处理地名+方位名
+        if (content.contains("部分")) {
+            content = content.replace("部分", " 部分");
+        }
+        if (content.contains("东部")) {
+            content = content.replace("东部", " 东部");
+        }
+        if (content.contains("西部")) {
+            content = content.replace("西部", " 西部");
+        }
+        if (content.contains("南部")) {
+            content = content.replace("南部", " 南 部");
+        }
+        if (content.contains("北部")) {
+            content = content.replace("北部", " 北部");
+        }
+
+        // 2.处理被网页符号隔开的地名
+        if (content.contains("<br>")) {
+            content = content.replace("<br>", "");
+        }
+
+        // 获取所有省份
+        List<Geoobject> proList = geoobjectRepository.findByGeotypeAsProvince();
+        for (Geoobject proGeoobject : proList) {
+            String proAdcode = proGeoobject.getAdcode();
+            String province = proGeoobject.getCngeoname();
+            // 当前省份下县名列表
+            List<Geoobject> countyNewList = geoobjectRepository.findByGeotypeAsCountyAndProAdcodeNew(proAdcode.substring(0, 2));
+            List<Geoobject> countyOldList = geoobjectRepository.findByGeotypeAsCountyAndProAdcodeOld(proAdcode.substring(0, 2));
+
+            // 新县名
+            for (Geoobject geoobject : countyNewList) {
+                String cngeoname = geoobject.getCngeoname();
+                String shortName = geoobject.getShortName();
+                if (content.contains(cngeoname)) {
+                    CountyNewVO countyNewVO = new CountyNewVO();
+                    countyNewVO.setValueContent(cngeoname);
+                    countyNewVO.setProvince(province);
+                    countyNewVO.setCounty(cngeoname);
+                    countyNewVO.setAdcode(geoobject.getAdcode());
+
+                    // 查询市名
+                    Geoobject geoobjectCity = geoobjectRepository.findByAdcode(geoobject.getPid());
+                    if ("市".equals(geoobjectCity.getGeotype())) {
+                        countyNewVO.setCity(geoobjectCity.getCngeoname());
+                    }
+                    countyNewVOList.add(countyNewVO);
+                } else if (content.contains(shortName)) {
+                    CountyNewVO countyNewVO = new CountyNewVO();
+                    countyNewVO.setValueContent(shortName);
+                    countyNewVO.setProvince(province);
+                    countyNewVO.setCounty(cngeoname);
+                    countyNewVO.setAdcode(geoobject.getAdcode());
+
+                    // 查询市名
+                    Geoobject geoobjectCity = geoobjectRepository.findByAdcode(geoobject.getPid());
+                    if ("市".equals(geoobjectCity.getGeotype())) {
+                        countyNewVO.setCity(geoobjectCity.getCngeoname());
+                    }
+                    countyNewVOList.add(countyNewVO);
+                } else if (content.contains(geoobject.getEngeoname())) {
+                    // 英文县名
+                    CountyNewVO countyNewVO = new CountyNewVO();
+                    countyNewVO.setValueContent(geoobject.getEngeoname());
+                    countyNewVO.setProvince(province);
+                    countyNewVO.setCounty(cngeoname);
+                    countyNewVO.setAdcode(geoobject.getAdcode());
+
+                    // 查询市名
+                    Geoobject geoobjectCity = geoobjectRepository.findByAdcode(geoobject.getPid());
+                    if ("市".equals(geoobjectCity.getGeotype())) {
+                        countyNewVO.setCity(geoobjectCity.getCngeoname());
+                    }
+                    countyNewVOList.add(countyNewVO);
+                }
+            }
+
+            // 旧县名
+            if (!CollectionUtils.isEmpty(countyOldList)) {
+                for (Geoobject geoobject : countyOldList) {
+                    String cngeoname = geoobject.getCngeoname();
+                    String shortName = geoobject.getShortName();
+                    if (content.contains(cngeoname)) {
+                        CountyOldVO countyOldVO = new CountyOldVO();
+                        countyOldVO.setValueContent(cngeoname);
+                        countyOldVO.setProvince(province);
+                        countyOldVO.setOldAdcode(geoobject.getAdcode());
+                        countyOldVO.setOldCounty(geoobject.getCngeoname());
+                        countyOldVO.setOldVersion(geoobject.getVersion());
+                        countyOldVO.setAdcode(geoobject.getRelation());
+
+                        Geoobject newgeoobject = geoobjectRepository.findByAdcode(geoobject.getRelation());
+                        countyOldVO.setNewCounty(newgeoobject.getCngeoname());
+
+                        // 查询市名
+                        Geoobject geoobjectCity = geoobjectRepository.findByAdcode(newgeoobject.getPid());
+                        if ("市".equals(geoobjectCity.getGeotype())) {
+                            countyOldVO.setCity(geoobjectCity.getCngeoname());
+                        }
+                        countyOldVOList.add(countyOldVO);
+                    } else if (content.contains(shortName)) {
+                        CountyOldVO countyOldVO = new CountyOldVO();
+                        countyOldVO.setValueContent(shortName);
+                        countyOldVO.setProvince(province);
+                        countyOldVO.setOldAdcode(geoobject.getAdcode());
+                        countyOldVO.setOldCounty(geoobject.getCngeoname());
+                        countyOldVO.setOldVersion(geoobject.getVersion());
+                        countyOldVO.setAdcode(geoobject.getRelation());
+
+                        Geoobject newgeoobject = geoobjectRepository.findByAdcode(geoobject.getRelation());
+                        countyOldVO.setNewCounty(newgeoobject.getCngeoname());
+
+                        // 查询市名
+                        Geoobject geoobjectCity = geoobjectRepository.findByAdcode(newgeoobject.getPid());
+                        if ("市".equals(geoobjectCity.getGeotype())) {
+                            countyOldVO.setCity(geoobjectCity.getCngeoname());
+                        }
+                        countyOldVOList.add(countyOldVO);
+                    } else if (content.contains(geoobject.getEngeoname())) {
+                        // 英文县名
+                        CountyOldVO countyOldVO = new CountyOldVO();
+                        countyOldVO.setValueContent(geoobject.getEngeoname());
+                        countyOldVO.setProvince(province);
+                        countyOldVO.setOldAdcode(geoobject.getAdcode());
+                        countyOldVO.setOldCounty(geoobject.getCngeoname());
+                        countyOldVO.setOldVersion(geoobject.getVersion());
+                        countyOldVO.setAdcode(geoobject.getRelation());
+
+                        Geoobject newgeoobject = geoobjectRepository.findByAdcode(geoobject.getRelation());
+                        countyOldVO.setNewCounty(newgeoobject.getCngeoname());
+
+                        // 查询市名
+                        Geoobject geoobjectCity = geoobjectRepository.findByAdcode(newgeoobject.getPid());
+                        if ("市".equals(geoobjectCity.getGeotype())) {
+                            countyOldVO.setCity(geoobjectCity.getCngeoname());
+                        }
+                        countyOldVOList.add(countyOldVO);
+                    }
+                }
+            }
+
+        }
+
+        JSONObject object = new JSONObject();
+        object.put("countyNewList", countyNewVOList);
+        object.put("countyOldList", countyOldVOList);
+
+
+        return BaseResultsUtil.success(object);
+    }
+
+    @Override
+    public BaseResults parseCountyDataPart(String content, String provinces) {
+        // 返回体
+        List<CountyNewVO> countyNewVOList = new ArrayList<>();
+        List<CountyOldVO> countyOldVOList = new ArrayList<>();
+        JSONObject object = new JSONObject();
+        // 涉及的省份列表
+        List<Geoobject> proList = new ArrayList<>();
+
+        // 1.处理地名+方位名
+        if (content.contains("部分")) {
+            content = content.replace("部分", " 部分");
+        }
+        if (content.contains("东部")) {
+            content = content.replace("东部", " 东部");
+        }
+        if (content.contains("西部")) {
+            content = content.replace("西部", " 西部");
+        }
+        if (content.contains("南部")) {
+            content = content.replace("南部", " 南 部");
+        }
+        if (content.contains("北部")) {
+            content = content.replace("北部", " 北部");
+        }
+
+        // 2.处理被网页符号隔开的地名
+        if (content.contains("<br>")) {
+            content = content.replace("<br>", "");
+        }
+
+        List<Geoobject> allProList = geoobjectRepository.findByGeotypeAsProvince();
+        for (Geoobject proGeoobject : allProList) {
+            String shortName = proGeoobject.getShortName();
+            if (provinces.contains(shortName)){
+                proList.add(proGeoobject);
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(proList)){
+            for (Geoobject proGeoobject : proList) {
+                String proAdcode = proGeoobject.getAdcode();
+                String province = proGeoobject.getCngeoname();
+                // 当前省份下县名列表
+                List<Geoobject> countyNewList = geoobjectRepository.findByGeotypeAsCountyAndProAdcodeNew(proAdcode.substring(0, 2));
+                List<Geoobject> countyOldList = geoobjectRepository.findByGeotypeAsCountyAndProAdcodeOld(proAdcode.substring(0, 2));
+
+                // 新县名
+                for (Geoobject geoobject : countyNewList) {
+                    String cngeoname = geoobject.getCngeoname();
+                    String shortName = geoobject.getShortName();
+                    if (content.contains(cngeoname)) {
+                        CountyNewVO countyNewVO = new CountyNewVO();
+                        countyNewVO.setValueContent(cngeoname);
+                        countyNewVO.setProvince(province);
+                        countyNewVO.setCounty(cngeoname);
+                        countyNewVO.setAdcode(geoobject.getAdcode());
+
+                        // 查询市名
+                        Geoobject geoobjectCity = geoobjectRepository.findByAdcode(geoobject.getPid());
+                        if ("市".equals(geoobjectCity.getGeotype())) {
+                            countyNewVO.setCity(geoobjectCity.getCngeoname());
+                        }
+                        countyNewVOList.add(countyNewVO);
+                    } else if (content.contains(shortName)) {
+                        CountyNewVO countyNewVO = new CountyNewVO();
+                        countyNewVO.setValueContent(shortName);
+                        countyNewVO.setProvince(province);
+                        countyNewVO.setCounty(cngeoname);
+                        countyNewVO.setAdcode(geoobject.getAdcode());
+
+                        // 查询市名
+                        Geoobject geoobjectCity = geoobjectRepository.findByAdcode(geoobject.getPid());
+                        if ("市".equals(geoobjectCity.getGeotype())) {
+                            countyNewVO.setCity(geoobjectCity.getCngeoname());
+                        }
+                        countyNewVOList.add(countyNewVO);
+                    } else if (content.contains(geoobject.getEngeoname())) {
+                        // 英文县名
+                        CountyNewVO countyNewVO = new CountyNewVO();
+                        countyNewVO.setValueContent(geoobject.getEngeoname());
+                        countyNewVO.setProvince(province);
+                        countyNewVO.setCounty(cngeoname);
+                        countyNewVO.setAdcode(geoobject.getAdcode());
+
+                        // 查询市名
+                        Geoobject geoobjectCity = geoobjectRepository.findByAdcode(geoobject.getPid());
+                        if ("市".equals(geoobjectCity.getGeotype())) {
+                            countyNewVO.setCity(geoobjectCity.getCngeoname());
+                        }
+                        countyNewVOList.add(countyNewVO);
+                    }
+                }
+
+                // 旧县名
+                if (!CollectionUtils.isEmpty(countyOldList)) {
+                    for (Geoobject geoobject : countyOldList) {
+                        String cngeoname = geoobject.getCngeoname();
+                        String shortName = geoobject.getShortName();
+                        if (content.contains(cngeoname)) {
+                            CountyOldVO countyOldVO = new CountyOldVO();
+                            countyOldVO.setValueContent(cngeoname);
+                            countyOldVO.setProvince(province);
+                            countyOldVO.setOldAdcode(geoobject.getAdcode());
+                            countyOldVO.setOldCounty(geoobject.getCngeoname());
+                            countyOldVO.setOldVersion(geoobject.getVersion());
+                            countyOldVO.setAdcode(geoobject.getRelation());
+
+                            Geoobject newgeoobject = geoobjectRepository.findByAdcode(geoobject.getRelation());
+                            countyOldVO.setNewCounty(newgeoobject.getCngeoname());
+
+                            // 查询市名
+                            Geoobject geoobjectCity = geoobjectRepository.findByAdcode(newgeoobject.getPid());
+                            if ("市".equals(geoobjectCity.getGeotype())) {
+                                countyOldVO.setCity(geoobjectCity.getCngeoname());
+                            }
+                            countyOldVOList.add(countyOldVO);
+                        } else if (content.contains(shortName)) {
+                            CountyOldVO countyOldVO = new CountyOldVO();
+                            countyOldVO.setValueContent(shortName);
+                            countyOldVO.setProvince(province);
+                            countyOldVO.setOldAdcode(geoobject.getAdcode());
+                            countyOldVO.setOldCounty(geoobject.getCngeoname());
+                            countyOldVO.setOldVersion(geoobject.getVersion());
+                            countyOldVO.setAdcode(geoobject.getRelation());
+
+                            Geoobject newgeoobject = geoobjectRepository.findByAdcode(geoobject.getRelation());
+                            countyOldVO.setNewCounty(newgeoobject.getCngeoname());
+
+                            // 查询市名
+                            Geoobject geoobjectCity = geoobjectRepository.findByAdcode(newgeoobject.getPid());
+                            if ("市".equals(geoobjectCity.getGeotype())) {
+                                countyOldVO.setCity(geoobjectCity.getCngeoname());
+                            }
+                            countyOldVOList.add(countyOldVO);
+                        } else if (content.contains(geoobject.getEngeoname())) {
+                            // 英文县名
+                            CountyOldVO countyOldVO = new CountyOldVO();
+                            countyOldVO.setValueContent(geoobject.getEngeoname());
+                            countyOldVO.setProvince(province);
+                            countyOldVO.setOldAdcode(geoobject.getAdcode());
+                            countyOldVO.setOldCounty(geoobject.getCngeoname());
+                            countyOldVO.setOldVersion(geoobject.getVersion());
+                            countyOldVO.setAdcode(geoobject.getRelation());
+
+                            Geoobject newgeoobject = geoobjectRepository.findByAdcode(geoobject.getRelation());
+                            countyOldVO.setNewCounty(newgeoobject.getCngeoname());
+
+                            // 查询市名
+                            Geoobject geoobjectCity = geoobjectRepository.findByAdcode(newgeoobject.getPid());
+                            if ("市".equals(geoobjectCity.getGeotype())) {
+                                countyOldVO.setCity(geoobjectCity.getCngeoname());
+                            }
+                            countyOldVOList.add(countyOldVO);
+                        }
+                    }
+                }
+
+            }
+        }else {
+            return BaseResultsUtil.error(500,"检测不出省名");
+        }
+
+        object.put("countyNewList", countyNewVOList);
+        object.put("countyOldList", countyOldVOList);
+        return BaseResultsUtil.success(object);
+    }
+
+
+    @Override
+    public JSON parseLngAndLat(String province, String city, String county, String locality) {
+        // 返回JSON
+        JSONObject response = new JSONObject();
         // 匹配到的县adcode列表
         Set<String> adcodeSet = new HashSet<>();
         String countyAdcode = "";
@@ -418,6 +718,8 @@ public class ParseServiceImpl implements ParseService {
         String place = "";
         // 返回经纬度表
         LngAndLatVO lngAndLatVO = new LngAndLatVO();
+        // 返回经纬度列表
+        List<LngAndLatVO> list = new ArrayList<>();
 
 
         // 省名校正
@@ -430,9 +732,13 @@ public class ParseServiceImpl implements ParseService {
             }
         }
         if (pList.size() == 0) {
-            return BaseResultsUtil.error(500, "未匹配到相应省名");
+            response.put("msg","未匹配到相应省名");
+            response.put("size",0);
+            return response;
         } else if (pList.size() > 1) {
-            return BaseResultsUtil.error(500, "出现多个省名");
+            response.put("msg","出现多个省名");
+            response.put("size",0);
+            return response;
         }
         // 省份确认 size == 1
         Geoobject pGeoobject = pList.get(0);
@@ -444,7 +750,9 @@ public class ParseServiceImpl implements ParseService {
         // 查询该省下所有匹配的县
         List<Geoobject> countyList = geoobjectRepository.findAllCountyByProAndName(pGeoobject.getAdcode().substring(0, 2), county);
         if (countyList.size() == 0) {
-            return BaseResultsUtil.error(500, "县未匹配");
+            response.put("msg","县未匹配");
+            response.put("size",0);
+            return response;
         } else if (countyList.size() == 1) {
             // 县名合适，不用校正
             Geoobject cGeoobject = countyList.get(0);
@@ -457,8 +765,6 @@ public class ParseServiceImpl implements ParseService {
             if (cityGeoobject.getGeotype().equals("市")){
                 lngAndLatVO.setCity(cityGeoobject.getCngeoname());
             }
-
-
 
         } else {
             // 匹配到多个县，需去除不符合的
@@ -490,15 +796,97 @@ public class ParseServiceImpl implements ParseService {
             } else {
                 // 还有影响数据，用市名处理
                 if (StringUtils.isBlank(city)) {
-                    // 市名为空，解决不了问题
-                    return BaseResultsUtil.error(500, "对应多个县名，且市名为空，无法确认");
+                    // 市名为空，返回列表数据
+                    response.put("msg","对应多个县名，且市名为空，返回列表数据");
+
+                    for (String countadcode : adcodeSet) {
+                        LngAndLatVO lngAndLatVO1 = BeanHelper.copyProperties(lngAndLatVO, LngAndLatVO.class);
+
+                        // 取出对应县
+                        Geoobject countyGeo = geoobjectRepository.findByAdcode(countadcode);
+                        lngAndLatVO1.setCounty(countyGeo.getCngeoname());
+                        lngAndLatVO1.setAdcode(countadcode);
+                        // 取出对应市名
+                        Geoobject cityGeoobject = geoobjectRepository.findByAdcode(countyGeo.getPid());
+                        if (cityGeoobject.getGeotype().equals("市")) {
+                            lngAndLatVO1.setCity(cityGeoobject.getCngeoname());
+                        }
+
+
+                        // 判断小地名是否存在
+                        if (StringUtils.isBlank(locality)) {
+                            // 小地名为空，先用县adcode查询经纬度对照表
+                            List<CountyCentroid> ccList = countyCentroidRepository.findByAdcode(countadcode);
+                            if (ccList.size() == 1) {
+                                // 数据匹配
+                                CountyCentroid countyCentroid = ccList.get(0);
+                                lngAndLatVO1.setLng(countyCentroid.getWgs84X());
+                                lngAndLatVO1.setLat(countyCentroid.getWgs84Y());
+                                list.add(lngAndLatVO1);
+                                continue;
+                            } else {
+                                // 没匹配到数据或者对应多个结果，可调用高德api
+                                if (StringUtils.isBlank(lngAndLatVO1.getCity())) {
+                                    place = lngAndLatVO1.getProvince() + lngAndLatVO1.getCounty();
+                                } else {
+                                    place = lngAndLatVO1.getProvince() + lngAndLatVO1.getCity() + lngAndLatVO1.getCounty();
+                                }
+
+                            }
+                        } else {
+                            // 小地名不为空,拼接api查询地址
+                            if (StringUtils.isBlank(lngAndLatVO1.getCity())){
+                                place = lngAndLatVO1.getProvince() + lngAndLatVO1.getCounty() + locality;
+                            }else {
+                                place = lngAndLatVO1.getProvince()+lngAndLatVO1.getCity()+lngAndLatVO1.getCounty()+locality;
+                            }
+                        }
+
+                        if(!StringUtils.isBlank(place)){
+                            // 调用高德api
+                            try {
+                                Map<String, String> parameters = new HashMap<String, String>();
+                                parameters.put("key", "3dbaea5ec9bd068f52b52ef58b8b1e5c");
+                                parameters.put("address", place);
+                                String data = HttpUtil.sendGet("https://restapi.amap.com/v3/geocode/geo", parameters);
+                                JSONObject result = JSONObject.parseObject(data);
+                                String status = result.getString("status");
+                                if ("1".equals(status)) {
+                                    JSONArray geocodes = result.getJSONArray("geocodes");
+                                    if (geocodes.size() == 1) {
+                                        JSONObject object = (JSONObject) geocodes.get(0);
+                                        String formatted_address = object.getString("formatted_address");
+                                        lngAndLatVO1.setApiaddresss(formatted_address);
+                                        String location = object.getString("location");
+                                        String[] split = location.split(",");
+                                        lngAndLatVO1.setLng(Double.parseDouble(split[0]));
+                                        lngAndLatVO1.setLat(Double.parseDouble(split[1]));
+                                        list.add(lngAndLatVO1);
+                                    }
+
+                                }
+
+                            } catch (Exception e) {
+                                response.put("size", 0);
+                                response.put("msg", "对应多个县名，且市名为空，返回列表数据 - 高德api查询异常");
+                                return response;
+                            }
+                        }
+
+                    }
+
+                    response.put("size",list.size());
+                    response.put("data",list);
+                    return response;
                 } else {
                     // 市名不为空，可用来找出对应县名
                     List<Geoobject> cityList = geoobjectRepository.findNewCityByProAndName(pGeoobject.getAdcode().substring(0, 2), city);
                     if (cityList.size() == 0) {
                         cityList = geoobjectRepository.findOldCityByProAndName(pGeoobject.getAdcode().substring(0, 2), city);
                         if (cityList.size() == 0) {
-                            return BaseResultsUtil.error(500, "对应多个县名；且市名未匹配，无法辨别");
+                            response.put("size",0);
+                            response.put("msg","对应多个县名；且市名未匹配，无法辨别");
+                            return response;
                         }
                     }
 
@@ -520,7 +908,9 @@ public class ParseServiceImpl implements ParseService {
                         }
 
                         if (countys.size() == 0) {
-                            return BaseResultsUtil.error(500, "对应多个县名，都与市名不匹配");
+                            response.put("size",0);
+                            response.put("msg","对应多个县名，都与市名不匹配");
+                            return response;
                         } else if (countys.size() == 1) {
                             // 通过校正，找到合适结果
                             // 新县名
@@ -531,35 +921,18 @@ public class ParseServiceImpl implements ParseService {
                             lngAndLatVO.setCity(newCity);
                             lngAndLatVO.setAdcode(countys.get(0).getAdcode());
 
-/*                            // 高德api经纬度查询语句
-                            if (StringUtils.isBlank(locality)){
-                                // 小地名为空，先用县adcode查询经纬度对照表
-                                String adcode = countys.get(0).getAdcode();
-                                List<CountyCentroid> ccList = countyCentroidRepository.findByAdcode(adcode);
-                                if (ccList.size() == 1){
-                                    // 数据匹配
-                                    CountyCentroid countyCentroid = ccList.get(0);
-                                    lngAndLatVO.setLng(countyCentroid.getWgs84X());
-                                    lngAndLatVO.setLat(countyCentroid.getWgs84Y());
-                                    return BaseResultsUtil.success(lngAndLatVO);
-                                }else {
-                                    // 没匹配到数据或者对应多个结果，可调用高德api
-                                    place = province + newCity + newCounty;
-                                }
-
-                            }else {
-                                // 小地名不为空，拼接
-                                place = province + newCity + newCounty + locality;
-                            }*/
-
 
                         } else {
                             // 市下有多个县合适（几乎不可能）
-                            return BaseResultsUtil.error(500, "对应多个县名，都与市名匹配，无法确认唯一的县");
+                            response.put("size",0);
+                            response.put("msg","对应多个县名，都与市名匹配，无法确认唯一的县");
+                            return response;
                         }
                     } else {
                         // 匹配到多个市（几乎不可能）
-                        return BaseResultsUtil.error(500, "对应多个县；且对应多个市，无法辨别");
+                        response.put("size",0);
+                        response.put("msg","对应多个县；且对应多个市，无法辨别");
+                        return response;
                     }
 
 
@@ -568,28 +941,6 @@ public class ParseServiceImpl implements ParseService {
             }
 
         }
-    /*    // 用2020年县全称查询
-        List<Geoobject> cNewCnList = geoobjectRepository.findNewCountyByProAndCngeoname(pGeoobject.getAdcode().substring(0, 2), county);
-        if (cNewCnList.size() == 0){
-            // 通过2020年县全称没查到，用2020年县简称查找
-            List<Geoobject> cNewShList = geoobjectRepository.findNewCountyByProAndShortName(pGeoobject.getAdcode().substring(0, 2), county);
-            if (cNewShList.size() == 0){
-                // 用2020年县简称没查到，用2020年前的县全称查找
-                List<Geoobject> cOldList = geoobjectRepository.findOldCountyByProAndCngeoname(pGeoobject.getAdcode().substring(0, 2), county);
-
-            }else if (cNewShList.size() == 1){
-                // 符合要求，不需要校正
-
-            }else {
-
-            }
-
-        }else if (cNewCnList.size() == 1){
-            // 符合要求，不需要校正
-
-        }else {
-            // 匹配到多个县，需要通过市名确认
-        }*/
         if (!StringUtils.isBlank(lngAndLatVO.getAdcode())){
             // 判断小地名是否存在
             if (StringUtils.isBlank(locality)){
@@ -601,7 +952,11 @@ public class ParseServiceImpl implements ParseService {
                     CountyCentroid countyCentroid = ccList.get(0);
                     lngAndLatVO.setLng(countyCentroid.getWgs84X());
                     lngAndLatVO.setLat(countyCentroid.getWgs84Y());
-                    return BaseResultsUtil.success(lngAndLatVO);
+                    list.add(lngAndLatVO);
+                    response.put("size",list.size());
+                    response.put("data",list);
+                    response.put("msg","获取经纬度成功");
+                    return response;
                 }else {
                     // 没匹配到数据或者对应多个结果，可调用高德api
                     if (StringUtils.isBlank(lngAndLatVO.getCity())){
@@ -638,19 +993,28 @@ public class ParseServiceImpl implements ParseService {
                         String[] split = location.split(",");
                         lngAndLatVO.setLng(Double.parseDouble(split[0]));
                         lngAndLatVO.setLat(Double.parseDouble(split[1]));
-                        return BaseResultsUtil.success(lngAndLatVO);
+                        list.add(lngAndLatVO);
+                        response.put("size",list.size());
+                        response.put("data",list);
+                        response.put("msg","获取经纬度成功");
+                        return response;
                     }
 
                 }else {
-                    return BaseResultsUtil.error(500,result.getString("info"));
+                    response.put("msg",result.getString("info"));
+                    response.put("size",0);
+                    return response;
                 }
 
             }catch (Exception e){
-                return BaseResultsUtil.error(500,e.toString());
+                response.put("msg",e.toString());
+                response.put("size",0);
+                return response;
             }
         }
-
-        return BaseResultsUtil.error(500,"未知错误");
+        response.put("msg","未知错误");
+        response.put("size",0);
+        return response;
     }
 
     @Override

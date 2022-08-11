@@ -27,7 +27,7 @@ public interface ParseService {
     JSON parseProvinceData(String content);
 
     /**
-     * <p><b>地名解析（县级）<b><p>
+     * <p><b>地名解析（县级）（先查省份后查县）<b><p>
      * <p>参数：解析语句<p>
      * @Author: Ny
      * @date  2022/8/2
@@ -35,12 +35,28 @@ public interface ParseService {
     BaseResults parseCountyData(String content);
 
     /**
+     * <p><b>地名解析（县级）（无视省份直接查县）<b><p>
+     * <p>参数：解析语句<p>
+     * @Author: Ny
+     * @date  2022/8/10
+     */
+    BaseResults parseCountyDataAll(String content);
+
+    /**
+     * <p><b>地名解析（县级）（在规定的省列表中查询对应县）<b><p>
+     * <p>参数：解析语句,省份合集<p>
+     * @Author: Ny
+     * @date  2022/8/10
+     */
+    BaseResults parseCountyDataPart(String content,String provinces);
+
+    /**
      * <p><b>经纬度查询与参数修正<b><p>
      * <p>参数：省、市、县、小地名<p>
      * @Author: Ny
      * @date  2022/8/4
      */
-    BaseResults parseLngAndLat(String province,String city,String county,String locality);
+    JSON parseLngAndLat(String province,String city,String county,String locality);
 
     /**
      * <p><b>经纬度查询<b><p>
