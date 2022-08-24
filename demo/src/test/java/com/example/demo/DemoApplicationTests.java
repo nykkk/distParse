@@ -79,14 +79,16 @@ class DemoApplicationTests {
 
     @Test
     public void de3(){
-        // JSON json = parseService.parseLngAndLat("河北", "", "新华", "");
-        //JSON json = parseService.parseLngAndLat("河北", "", "新华", "河北政法学院");
-        //JSON json = parseService.parseLngAndLat("河北", "沧州", "新华", "");
-        // JSON json = parseService.parseLngAndLat("河北", "石家庄", "新华", "");
-         //JSON json = parseService.parseLngAndLat("河北", "唐山市", "新华", "");
-        // JSON json = parseService.parseLngAndLat("河北", "石家庄", "无为", "");
-        // JSON json = parseService.parseLngAndLat("河北", "石家庄", "无为", "");
-         JSON json = parseService.parseLngAndLat("河r", "石家庄", "无为", "");
+         //BaseResults json = parseService.parseLngAndLat("河北", "", "新华", "");
+         BaseResults json = parseService.parseLngAndLatByGd("河北", "石家庄", "新华", "");
+         //BaseResults json = parseService.parseLngAndLat("安徽", "", "黄山区", "");
+        //BaseResults json = parseService.parseLngAndLat("河北", "", "新华", "河北政法学院");
+        //BaseResults json = parseService.parseLngAndLat("河北", "沧州", "新华", "");
+        // BaseResults json = parseService.parseLngAndLat("河北", "石家庄", "新华", "");
+         //BaseResults json = parseService.parseLngAndLat("河北", "唐山市", "新华", "");
+        // BaseResults json = parseService.parseLngAndLat("河北", "石家庄", "无为", "");
+        // BaseResults json = parseService.parseLngAndLat("河北", "石家庄", "无为", "");
+        // BaseResults json = parseService.parseLngAndLat("河r", "石家庄", "无为", "");
         //JSON json = parseService.parseLngAndLat("河北", "", "无为", "");
         System.out.println(json);
 
@@ -94,7 +96,7 @@ class DemoApplicationTests {
 
     @Test
     public void de4(){
-        BaseResults baseResults = parseService.parseLngAndLatFromData("国内分布：产于安徽南部（歙县、休宁、祁门）、浙江南部和西部（龙泉、遂昌、丽水、泰顺、平阳、西天目山）、江西、福建、湖南（宁远、长沙、宜章、雪峰山、新宁、汝桂、酃县、东安、莽山、城步）、广东、广西（西部山区除外）、贵州（黎平）等地区");
+        BaseResults baseResults = parseService.parseLngAndLatFromDataByGd("国内分布：产于安徽南部（歙县、休宁、祁门）、浙江南部和西部（龙泉、遂昌、丽水、泰顺、平阳、西天目山）、江西、福建、湖南（宁远、长沙、宜章、雪峰山、新宁、汝桂、酃县、东安、莽山、城步）、广东、广西（西部山区除外）、贵州（黎平）等地区");
         System.out.println(baseResults.toString());
     }
 

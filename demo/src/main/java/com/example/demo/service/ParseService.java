@@ -56,7 +56,15 @@ public interface ParseService {
      * @Author: Ny
      * @date  2022/8/4
      */
-    JSON parseLngAndLat(String province,String city,String county,String locality);
+    BaseResults parseLngAndLat(String province,String city,String county,String locality);
+
+    /**
+     * <p><b>经纬度查询与参数修正（限定高德查询）<b><p>
+     * <p>参数：省、市、县、小地名<p>
+     * @Author: Ny
+     * @date  2022/8/24
+     */
+    BaseResults parseLngAndLatByGd(String province,String city,String county,String locality);
 
     /**
      * <p><b>经纬度查询<b><p>
@@ -65,4 +73,12 @@ public interface ParseService {
      * @date  2022/8/5
      */
     BaseResults parseLngAndLatFromData(String content);
+
+    /**
+     * <p><b>经纬度查询(限定高德查询)<b><p>
+     * <p>参数：解析语句<p>
+     * @Author: Ny
+     * @date  2022/8/24
+     */
+    BaseResults parseLngAndLatFromDataByGd(String content);
 }
